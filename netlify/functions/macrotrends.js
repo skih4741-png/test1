@@ -5,7 +5,7 @@ exports.handler = async (event) => {
   const t = url.searchParams.get('ticker');
   if(!t) return json({error:'ticker required'},400);
   try{
-    const r = await fetch(`https://www.macrotrends.net/stocks/charts/${t}/${t}/key-financial-ratios`);
+    const r = await fetch(`https://www.macrotrends.net/stocks/charts/${t}/${t}/key-financial-ratios`, { headers: { 'user-agent':'Mozilla/5.0', 'accept':'text/html,application/xhtml+xml' } });
     const html = await r.text();
     function pick(re){ const m = html.match(re); return m ? parseFloat(m[1]) : null; }
     const out = {

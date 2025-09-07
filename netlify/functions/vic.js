@@ -1,20 +1,26 @@
 
-import * as cheerio from 'cheerio';
 const { json } = require('./_util.js');
 
-export default async (req) => {
-  const cookie = process.env.VIC_COOKIE;
-  if (!cookie) return json({warning:'VIC_COOKIE not set; skipping VIC fetch'});
+exports.handler = async () => {
   try{
-    const res = await fetch('https://valueinvestorsclub.com/ideas', { headers:{ cookie } });
-    const html = await res.text();
-    const $ = cheerio.load(html);
-    const ideas = [];
-    $('.ideas-list .idea').each((_,el)=>{
-      const title = $(el).find('.title').text().trim();
-      const ticker = (title.match(/\(([A-Z.]+)\)/)||[])[1];
-      ideas.push({title, ticker});
-    });
-    return json({ideas});
-  }catch(e){ return json({error:String(e)},500); }
-}
+    // Public landing shows limited recent idea titles but details need login.
+    const r = await fetch('https://www.valueinvestorsclub.com/');
+    const html = await r.text();
+    const items = [];
+    // crude extraction: anchor text that looks like idea titles
+    const re = /<a[^>]+href="\/idea\/[^"]+"[^>]*>(.*?)<\/a>/gi;
+    let m; const seen = new Set();
+    while ((m = re.exec(html)) && items.length < 20){
+      const title = m[1].replace(/<[^>]+>/g,'').trim();
+      if(!title || seen.has(title)) continue;
+      seen.add(title);
+      items.push({ title, url: 'https://www.valueinvestorsclub.com' });
+    }
+    if(items.length===0){
+      return json({ items: [], note: 'VIC는 로그인 없이 상세 접근이 제한됩니다.' });
+    }
+    return json({ items, note: '상세 본문은 로그인 필요' });
+  }catch(e){
+    return json({ items: [], note: 'VIC 접근 실패(공개 페이지 제한 가능).', error: String(e) });
+  }
+};
