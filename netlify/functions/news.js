@@ -1,6 +1,5 @@
 
-import fetch from 'node-fetch';
-import { json } from './_util.mjs';
+const { json } = require('./_util.js');
 
 function summarize(text, max=400){
   const sents = text.split(/[.!?]\s+/).slice(0,6);

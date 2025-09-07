@@ -1,11 +1,12 @@
 [build]
-  command = ""
   publish = "."
   functions = "netlify/functions"
 
 [functions]
-  external_node_modules = ["cheerio", "node-fetch"]
+  node_bundler = "esbuild"
+  external_node_modules = ["cheerio","twilio"]
 
-[[functions]]
-  name = "alert"
+# Scheduled function: runs every 5 minutes
+[[scheduled]]
+  path = "/.netlify/functions/alert"
   schedule = "*/5 * * * *"

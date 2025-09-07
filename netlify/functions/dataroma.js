@@ -1,7 +1,6 @@
 
-import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
-import { json } from './_util.mjs';
+const { json } = require('./_util.js');
 
 export default async (req) => {
   try{

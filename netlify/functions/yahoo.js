@@ -1,6 +1,4 @@
 
-import fetch from 'node-fetch';
-import { json } from './_util.mjs';
 
 export default async (req) => {
   const url = new URL(req.url);
@@ -11,7 +9,7 @@ export default async (req) => {
       const r = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`);
       const j = await r.json();
       const q = j.quoteResponse.result[0] || {};
-      return json({ price: q.regularMarketPrice, currency: q.currency, name:q.shortName });
+      return require('./_util.js').json({ price: q.regularMarketPrice, currency: q.currency, name:q.shortName });
     }
     if (f === 'chart'){
       const range = url.searchParams.get('range') || '6mo';
@@ -36,7 +34,7 @@ export default async (req) => {
       let signal = '';
       if (lastRSI<=30) signal = 'RSI 과매도 → 매수 관심 구간';
       else if (lastRSI>=70) signal = 'RSI 과매수 → 매도/차익 고려';
-      return json({timestamps, prices, rsi:lastRSI, signal});
+      return require('./_util.js').json({timestamps, prices, rsi:lastRSI, signal});
     }
     if (f === 'dividends'){
       const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1y&interval=1d&events=div`);
@@ -45,8 +43,8 @@ export default async (req) => {
       const events = (c?.events?.dividends) || {};
       const items = Object.values(events).map(d=>({amount:d.amount, date:d.date}));
       const total = items.reduce((a,b)=>a+b.amount,0);
-      return json({items, total});
+      return require('./_util.js').json({items, total});
     }
-    return json({error:'unknown f'},400);
-  }catch(e){ return json({error:String(e)} ,500); }
+    return require('./_util.js').json({error:'unknown f'},400);
+  }catch(e){ return require('./_util.js').json({error:String(e)} ,500); }
 }
