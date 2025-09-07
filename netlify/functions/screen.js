@@ -2,22 +2,29 @@
 import * as cheerio from 'cheerio';
 const { json } = require('./_util.js');
 
+
 async function macro(ticker){
   try{
     const r = await fetch(`https://www.macrotrends.net/stocks/charts/${ticker}/${ticker}/key-financial-ratios`);
     const html = await r.text();
-    const $ = cheerio.load(html);
-    const text = $('body').text();
-    function findNumber(re){ const m = text.match(re); return m ? parseFloat(m[1]) : null; }
+    function pick(re){ const m = html.match(re); return m ? parseFloat(m[1]) : null; }
     return {
-      PER: findNumber(/Price\/Earnings Ratio.*?([0-9.]+)\s*$/m) || null,
-      PBR: findNumber(/Price\/Book Ratio.*?([0-9.]+)\s*$/m) || null,
-      PSR: findNumber(/Price\/Sales Ratio.*?([0-9.]+)\s*$/m) || null,
-      ROE: findNumber(/Return on Equity.*?([0-9.]+)\%/m) || null
+      PER: pick(/Price\/Earnings Ratio[\s\S]*?<td[^>]*>([0-9.]+)<\/td>/i),
+      PBR: pick(/Price\/Book Ratio[\s\S]*?<td[^>]*>([0-9.]+)<\/td>/i),
+      PSR: pick(/Price\/Sales Ratio[\s\S]*?<td[^>]*>([0-9.]+)<\/td>/i),
+      ROE: pick(/Return on Equity[\s\S]*?<td[^>]*>([0-9.]+)\%<\/td>/i)
     };
   }catch{ return {}; }
 }
 
+async function dataromaTop(){
+  try{
+    const r = await fetch('https://www.dataroma.com/m/home');
+    const html = await r.text();
+    const out = Array.from(new Set((html.match(/>[A-Z.]{1,6}</g)||[]).map(s=>s.slice(1,-1))));
+    return out.slice(0,100);
+  }catch{ return []; }
+}
 async function dataromaTop(){
   try{
     const r = await fetch('https://www.dataroma.com/m/home');

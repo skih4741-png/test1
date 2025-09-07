@@ -2,10 +2,6 @@
   publish = "."
   functions = "netlify/functions"
 
-[functions]
-  node_bundler = "esbuild"
-  external_node_modules = ["cheerio","twilio"]
-
 # Scheduled function: runs every 5 minutes
 [[scheduled]]
   path = "/.netlify/functions/alert"

@@ -1,17 +1,11 @@
 
-import * as cheerio from 'cheerio';
 const { json } = require('./_util.js');
 
-export default async (req) => {
+exports.handler = async () => {
   try{
-    const res = await fetch(`https://www.dataroma.com/m/home`);
+    const res = await fetch('https://www.dataroma.com/m/home');
     const html = await res.text();
-    const $ = cheerio.load(html);
-    const out = [];
-    $('table td a').each((_,el)=>{
-      const t = $(el).text().trim();
-      if (/^[A-Z.]{1,6}$/.test(t)) out.push(t);
-    });
-    return json({tickers:[...new Set(out)].slice(0,50)});
+    const tickers = Array.from(new Set((html.match(/>[A-Z.]{1,6}</g)||[]).map(s=>s.slice(1,-1)))).slice(0,50);
+    return json({tickers});
   }catch(e){ return json({error:String(e)},500); }
 }

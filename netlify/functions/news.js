@@ -17,7 +17,7 @@ async function translateKO(text){
   }catch{ return null; }
 }
 
-export default async (req) => {
+exports.handler = async (event) => { const req = event;
   const url = new URL(req.url);
   const ticker = url.searchParams.get('ticker');
   try{
