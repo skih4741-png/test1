@@ -9,6 +9,25 @@ document.querySelectorAll('.tab').forEach(btn => {
   });
 });
 
+
+async function fetchFX(){
+  // Yahoo Finance FX ticker
+  try{
+    const r = await fetch("/.netlify/functions/yahoo?f=quote&ticker=USDKRW=X");
+    const j = await r.json();
+    if (j && j.price){
+      document.getElementById('fxInput').value = j.price;
+      const info = document.getElementById('fxInfo');
+      if (info) info.textContent = `야후 기준 환율 적용: ${j.price.toFixed(2)}₩/USD`;
+      return j.price;
+    }
+  }catch(e){
+    const info = document.getElementById('fxInfo');
+    if (info) info.textContent = "환율 동기화 실패 — 수동 입력값 사용";
+  }
+  return parseFloat(document.getElementById('fxInput').value)||1350;
+}
+
 // Local Storage
 const LS_KEY = 'smarttrader_positions_v1';
 const state = { positions: [] };
@@ -154,3 +173,5 @@ document.getElementById('screenBtn').onclick = async () => {
 
 // Init
 loadLS();
+
+const fxBtn = document.getElementById('fxSyncBtn'); if (fxBtn) fxBtn.onclick = async ()=>{ await fetchFX(); await renderPositions(); await loadDivSummary(); };

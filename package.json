@@ -8,6 +8,8 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
-    "twilio": "^4.24.0"
-  }
+    "twilio": "^4.24.0",
+    "@netlify/blobs": "^6.4.0"
+  },
+  "type": "commonjs"
 }
