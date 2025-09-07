@@ -1,122 +1,132 @@
+
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>스마트 트레이더</title>
-<link href="https://cdn.jsdelivr.net/npm/modern-normalize@2/modern-normalize.min.css" rel="stylesheet">
-<link href="assets/style.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Smart Trader – Portfolio · Screener · Compare · Dividends · News · Alerts</title>
+  <style>
+    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; padding:16px; line-height:1.4;}
+    h2{margin-top:24px; border-bottom:1px solid #eee; padding-bottom:6px;}
+    .grid{display:grid; gap:12px;}
+    .cols-2{grid-template-columns:1fr 1fr;}
+    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    input, select, button{padding:6px 8px; font-size:14px;}
+    table{width:100%; border-collapse:collapse; margin-top:8px;}
+    th,td{border:1px solid #eee; padding:6px; text-align:left;}
+    td.num{text-align:right;}
+    .card{border:1px solid #eee; padding:8px; border-radius:8px; margin:6px 0;}
+    .hint{font-size:12px; color:#666;}
+    .spark canvas{display:block}
+    .danger{color:#b00020}
+  </style>
 </head>
 <body>
-<header class="topbar">
-  <h1>스마트 트레이더</h1>
-  <div class="actions">
-    <button id="saveBtn">저장</button>
-    <button id="loadBtn">불러오기</button>
-  </div>
-</header>
-<nav class="tabs">
-  <button class="tab active" data-tab="portfolio">포트폴리오</button>
-  <button class="tab" data-tab="compare">종목 비교/랭킹</button>
-  <button class="tab" data-tab="dividends">월별 배당</button>
-  <button class="tab" data-tab="news">뉴스 요약/번역</button>
-  <button class="tab" data-tab="alerts">가격 하락 알림</button>
-  <button class="tab" data-tab="screen">가치 스크리너</button>
-</nav>
-<main>
-<section id="portfolio" class="panel active">
-  <div class="grid">
-    <div class="card">
-      <h3>보유 종목 입력</h3>
-      <div class="row">
-        <input id="tickerInput" placeholder="티커 (예: AAPL, MSFT)" />
-        <input id="qtyInput" type="number" placeholder="수량" />
-        <input id="avgInput" type="number" step="0.0001" placeholder="평균매입가(USD)" />
-        <button id="addBtn">추가</button>
-      </div>
-      <div class="row"><button id="loadSample">예시 포트폴리오 로드</button></div>
-      <table id="positionsTbl"><thead><tr><th>티커</th><th>수량</th><th>평균매입가</th><th>현재가</th><th>P/L(USD)</th><th>현실 수익률(KRW)</th><th></th></tr></thead><tbody></tbody></table>
-    </div>
-    <div class="card">
-      <h3>환율/세금/수수료/배당 재투자</h3>
-      <label>USD→KRW 환율 <input id="fxInput" type="number" value="1350"> <button id="fxSyncBtn">야후 환율 동기화</button></label><div class="hint" id="fxInfo">기본값 1350 • 동기화 버튼을 눌러 실시간 갱신</div>
-      <label>매도 수수료(%) <input id="feeInput" type="number" step="0.01" value="0.1"></label>
-      <label>배당 원천세(%) <input id="taxInput" type="number" step="0.01" value="15"></label>
-      <label><input id="reinvestChk" type="checkbox"> 배당 재투자</label>
-      <label>매수/매도 타이밍 지표
-        <select id="signalSel">
-          <option value="RSI">RSI(14)</option>
-          <option value="MACD">MACD(12,26,9)</option>
-          <option value="SMA">SMA 교차(20/60)</option>
-        </select>
-      </label>
-      <button id="recalcBtn">재계산</button>
-    </div>
-  </div>
-  <div class="card">
-    <h3>시그널 & 차트</h3>
-    <canvas id="priceChart" height="120"></canvas>
-    <div id="signalBox" class="hint"></div>
-  </div>
-</section>
+  <h1>Smart Trader</h1>
+  <div class="hint">야후 파이낸스/매크로트렌즈/데이터로마 연동 · 환율 동기화, 포트폴리오/스크리너/비교/배당/뉴스/알림</div>
 
-<section id="compare" class="panel">
-  <div class="card">
-    <h3>멀티 종목 비교/랭킹</h3>
-    <div class="row">
-      <input id="compareTickers" placeholder="쉼표로 구분: AAPL,MSFT,AMZN" />
-      <button id="compareBtn">비교</button>
-    </div>
-    <table id="rankTbl"><thead><tr><th>티커</th><th>PER</th><th>PBR</th><th>PSR</th><th>ROE%</th><th>점수</th></tr></thead><tbody></tbody></table>
+  <!-- Portfolio -->
+  <h2>보유 종목</h2>
+  <div class="row">
+    <input id="tickerInput" placeholder="AAPL"/>
+    <input id="qtyInput" type="number" placeholder="수량"/>
+    <input id="avgInput" type="number" placeholder="평단(USD)"/>
+    <button id="addBtn">추가</button>
   </div>
-</section>
+  <div class="row">
+    <label>USD→KRW 환율 <input id="fxInput" type="number" value="1350"> <button id="fxSyncBtn">야후 환율 동기화</button></label>
+    <label>수수료(%) <input id="feeInput" type="number" value="0.1"></label>
+    <label>배당세(%) <input id="taxInput" type="number" value="15"></label>
+    <label>재투자 <input id="reinvestInput" type="checkbox"></label>
+    <select id="timingSelect"><option value="rsi14">RSI(14)</option></select>
+    <button id="recalcBtn">재계산</button>
+  </div>
+  <table>
+    <thead><tr><th>Ticker</th><th>수량</th><th>평단</th><th>현재가</th><th>P/L(USD)</th><th>수익률</th><th>행</th></tr></thead>
+    <tbody id="positionsTbody"></tbody>
+  </table>
+  <div class="row">
+    <canvas id="signalCanvas" width="640" height="220"></canvas>
+    <div id="signalInfo"></div>
+  </div>
 
-<section id="dividends" class="panel">
-  <div class="card">
-    <h3>월별 배당 합산/현황</h3>
-    <table id="divTbl"><thead><tr><th>월</th><th>세후 배당(원)</th></tr></thead><tbody></tbody></table>
-    <canvas id="divChart" height="120"></canvas>
+  <!-- Screener -->
+  <h2>가치 스크리너</h2>
+  <div class="row">
+    <label>투자금액: <input id="scrMin" type="number" placeholder="최소(USD)"/> ~ <input id="scrMax" type="number" placeholder="최대(USD)"/></label>
+    <button id="scrBtn">추천 종목</button>
+    <button id="scrCsvBtn">CSV 다운로드</button>
+    <button id="scrXlsBtn">Excel 다운로드</button>
   </div>
-</section>
+  <table>
+    <thead><tr><th>Ticker</th><th>Price</th><th>PER</th><th>PSR</th><th>ROE</th><th>Sector</th><th>MarketCap</th><th>Qty</th></tr></thead>
+    <tbody id="scrTbody"></tbody>
+  </table>
 
-<section id="news" class="panel">
-  <div class="card">
-    <h3>뉴스 자동요약/번역</h3>
-    <div class="row"><input id="newsTicker" placeholder="티커 (예: AAPL)" /><button id="newsBtn">불러오기</button></div>
-    <div id="newsList"></div>
+  <!-- Compare / Ranking -->
+  <h2>종목 비교/랭킹</h2>
+  <div class="row">
+    <input id="cmpInput" placeholder="AAPL, MSFT, NVDA"/>
+    <select id="cmpHzn">
+      <option value="1mo">1M</option>
+      <option value="3mo" selected>3M</option>
+      <option value="6mo">6M</option>
+      <option value="1y">1Y</option>
+    </select>
+    <button id="cmpBtn">성능 비교</button>
   </div>
-</section>
+  <table>
+    <thead>
+      <tr>
+        <th>Ticker</th><th>Sector</th><th>MarketCap</th>
+        <th>Return%</th><th>AdjReturn% (1sh, 세후배당)</th><th>NetDividendUSD(1sh)</th><th>AdjReturn KRW (1sh)</th>
+        <th>PER</th><th>PSR</th><th>ROE</th><th>Rank</th><th>Mini</th>
+      </tr>
+    </thead>
+    <tbody id="cmpTbody"></tbody>
+  </table>
 
-<section id="alerts" class="panel">
-  <div class="card">
-    <h3>가격 하락 알림 (SMS)</h3>
-    <div class="row">
-      <input id="alertTicker" placeholder="티커" />
-      <input id="alertDrop" type="number" step="0.1" placeholder="하락 % (예: 5)" />
-      <input id="alertPhone" placeholder="연락처(예: 010-1234-5678 또는 +821012345678)" />
-      <button id="alertSave">알림 저장</button>
-    </div>
-    <div id="alertInfo" class="hint"></div>
+  <!-- Dividends Pivot -->
+  <h2>월별 배당 (연/월 피벗)</h2>
+  <div class="row">
+    <input id="divPivotTicker" placeholder="AAPL"/>
+    <button id="divPivotBtn">Load Pivot</button>
   </div>
-</section>
+  <div id="divPivotInfo" class="hint"></div>
+  <h4>Sum by Year/Month</h4>
+  <table><thead>
+    <tr><th>Year</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr>
+  </thead><tbody id="divPivotSum"></tbody></table>
+  <h4>Average by Year/Month</h4>
+  <table><thead>
+    <tr><th>Year</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr>
+  </thead><tbody id="divPivotAvg"></tbody></table>
+  <canvas id="divPivotChart" width="640" height="160"></canvas>
 
-<section id="screen" class="panel">
-  <div class="card">
-    <h3>버핏식 가치 스크리너</h3>
-    <div class="grid">
-      <label>PER ≤ <input id="critPER" type="number" value="15"></label>
-      <label>PBR ≤ <input id="critPBR" type="number" step="0.1" value="1.5"></label>
-      <label>PSR &lt; <input id="critPSR" type="number" step="0.1" value="3"></label>
-      <label>ROE ≥ <input id="critROE" type="number" step="0.1" value="15"></label>
-      <label>예산 (USD) <input id="budgetMin" type="number" placeholder="최소"> ~ <input id="budgetMax" type="number" placeholder="최대"></label>
-      <button id="screenBtn">검색</button>
-    </div>
-    <table id="screenTbl"><thead><tr><th>티커</th><th>이름</th><th>PER</th><th>PBR</th><th>PSR</th><th>ROE%</th><th>근거</th></tr></thead><tbody></tbody></table>
+  <!-- News -->
+  <h2>뉴스 요약/번역(확장)</h2>
+  <div class="row">
+    <input id="newsInput" placeholder="NVDA or 'semiconductor'"/>
+    <button id="newsBtn">Fetch News</button>
   </div>
-</section>
-</main>
-<footer class="foot">© Smart Trader • 2025-09-07</footer>
-<script src="assets/app.js"></script>
+  <table>
+    <thead><tr><th>Source</th><th>Time</th><th>±</th><th>Title</th><th>Link</th></tr></thead>
+    <tbody id="newsTbody"></tbody>
+  </table>
+
+  <!-- Alerts -->
+  <h2>가격 하락 알림 (5분 주기)</h2>
+  <div class="row">
+    <input id="alertTicker" placeholder="AAPL"/>
+    <input id="alertDrop" type="number" placeholder="하락%"/>
+    <input id="alertPhone" placeholder="+82 10-1234-5678"/>
+    <button id="alertSaveBtn">저장</button>
+  </div>
+  <table>
+    <thead><tr><th>Ticker</th><th>하락%</th><th>연락처</th><th>기준가</th><th>행</th></tr></thead>
+    <tbody id="alertTbody"></tbody>
+  </table>
+
+  <script src="assets/app.js"></script>
 </body>
 </html>

@@ -1,34 +1,19 @@
 
 const { json } = require('./_util.js');
-
-function summarize(text, max=400){
-  const sents = text.split(/[.!?]\s+/).slice(0,6);
-  return sents.join('. ') + (sents.length>0?'.':'');
-}
-
-async function translateKO(text){
-  const url = process.env.TRANSLATE_URL;
-  if(!url) return null;
+exports.handler = async (event) => {
+  const url = new URL(event.rawUrl || event.url);
+  const q = url.searchParams.get('q');
+  if(!q) return json({items:[]});
   try{
-    const res = await fetch(url, {method:'POST', headers:{'content-type':'application/json'},
-      body: JSON.stringify({q:text, source:'en', target:'ko', format:'text', api_key: process.env.TRANSLATE_API_KEY||undefined})});
-    const j = await res.json();
-    return j.translatedText || null;
-  }catch{ return null; }
-}
-
-exports.handler = async (event) => { const req = event;
-  const url = new URL(req.url);
-  const ticker = url.searchParams.get('ticker');
-  try{
-    const r = await fetch(`https://query1.finance.yahoo.com/v1/finance/search?q=${ticker}`);
-    const j = await r.json();
-    const news = (j.news || []).slice(0,6).map(n=>({title:n.title, link:n.link, source:n.publisher, time:n.providerPublishTime, summary:n.summary||''}));
-    for (const n of news){
-      const s = n.summary || n.title;
-      n.summary = summarize(s);
-      n.summary_ko = await translateKO(n.summary);
-    }
-    return json({items: news});
-  }catch(e){ return json({error:String(e)},500); }
+    // simple Yahoo RSS proxy parse server-side for CORS-free
+    const rss = await fetch(`https://feeds.finance.yahoo.com/rss/2.0/headline?s=${encodeURIComponent(q)}&region=US&lang=en-US`);
+    const txt = await rss.text();
+    const items = [...txt.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m=>m[1]).slice(0,30).map(it=>{
+      const title = (it.match(/<title>([\s\S]*?)<\/title>/)||[])[1]?.replace(/<!\[CDATA\[|\]\]>/g,'')||'';
+      const link = (it.match(/<link>(.*?)<\/link>/)||[])[1]||'';
+      const date = (it.match(/<pubDate>(.*?)<\/pubDate>/)||[])[1]||'';
+      return { title, url: link, time: date, source: '' };
+    });
+    return json({items});
+  }catch(e){ return json({items:[]}); }
 }

@@ -1,13 +1,12 @@
 
 const { json } = require('./_util.js');
-
 exports.handler = async (event) => {
   const url = new URL(event.rawUrl || event.url);
-  const ticker = url.searchParams.get('ticker');
-  if(!ticker) return json({error:'ticker required'},400);
+  const t = url.searchParams.get('ticker');
+  if(!t) return json({error:'ticker required'},400);
   try{
-    const res = await fetch(`https://www.macrotrends.net/stocks/charts/${ticker}/${ticker}/key-financial-ratios`);
-    const html = await res.text();
+    const r = await fetch(`https://www.macrotrends.net/stocks/charts/${t}/${t}/key-financial-ratios`);
+    const html = await r.text();
     function pick(re){ const m = html.match(re); return m ? parseFloat(m[1]) : null; }
     const out = {
       PER: pick(/Price\/Earnings Ratio[\s\S]*?<td[^>]*>([0-9.]+)<\/td>/i),
