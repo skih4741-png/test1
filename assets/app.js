@@ -14,9 +14,15 @@ window.addEventListener('error', e => showErr('[ERROR] '+e.message));
 window.addEventListener('unhandledrejection', e => showErr('[REJECTION] '+(e.reason?.message || String(e.reason))));
 
 async function j(url, opt){
-  const r = await fetch(url, opt);
-  if(!r.ok) throw new Error(r.status+' '+r.statusText);
-  return r.json();
+  try{
+    const r = await fetch(url, opt);
+    let data = null;
+    try { data = await r.json(); } catch(_){ data = null; }
+    // Do NOT throw here; bubble as structured object
+    return { _ok: r.ok, _status: r.status, _statusText: r.statusText, ...(data||{}) };
+  }catch(e){
+    return { _ok:false, _status:0, error:'network_error', detail:String(e) };
+  }
 }
 
 // ======= backend wrappers (stable endpoints) =======
@@ -137,8 +143,8 @@ function bindPortfolio(){
   $('#fxSyncBtn').onclick = async ()=>{
     try{
       const q = await apiYahooQuote('USDKRW=X');
-      state.fx = Number(q.price||state.fx);
-      $('#fxInput').value = state.fx;
+      if(q && q.price!=null){ state.fx = Number(q.price); $('#fxInput').value = state.fx; }
+      else { showErr('[FX] ' + (q?.error||q?._status||'fail')); }
     }catch(e){ showErr('[FX] '+e.message); }
   };
   $('#recalcBtn').onclick = ()=>{
