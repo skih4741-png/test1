@@ -1,50 +1,23 @@
+
 import fetch from "node-fetch";
+import * as cheerio from "cheerio";
 
-async function translateKo(text){
-  const provider = process.env.TRANSLATE_PROVIDER||"";
-  if(!text) return "";
+export const handler = async (event) => {
   try{
-    if(provider==="google" && process.env.GOOGLE_TRANSLATE_API_KEY){
-      const r = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${process.env.GOOGLE_TRANSLATE_API_KEY}`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({q:text, target:'ko'})
-      });
-      const j = await r.json();
-      return j.data?.translations?.[0]?.translatedText || text;
-    }else if(provider==="libre" && process.env.LIBRE_TRANSLATE_URL){
-      const r = await fetch(`${process.env.LIBRE_TRANSLATE_URL}/translate`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({q:text, source:'en', target:'ko', format:'text'})
-      });
-      const j = await r.json();
-      return j.translatedText || text;
-    }
-  }catch{}
-  return text;
-}
+    const { symbol="AAPL" } = event.queryStringParameters || {};
+    const url = `https://finance.yahoo.com/quote/${symbol}`;
+    const html = await (await fetch(url, { headers:{ "User-Agent":"Mozilla/5.0" }})).text();
+    const $ = cheerio.load(html);
 
-function summarize(s, n=300){
-  if(!s) return "";
-  return s.length>n ? s.slice(0,n)+"..." : s;
-}
-
-export const handler = async (event)=>{
-  const {q} = event.queryStringParameters||{};
-  if(!q) return {statusCode:400, body:"q required"};
-  const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=0&newsCount=8`;
-  const r = await fetch(url); const j = await r.json();
-  const items = (j.news||[]).map(n=>({title:n.title, url:n.link, time:(n.providerPublishTime||Date.now()*0.001)*1000}));
-  const detailed = [];
-  for(const it of items){
-    let sumText = it.title;
-    try{
-      // As a placeholder, use title as "summary". In production, fetch article and summarize.
-      const koTitle = await translateKo(it.title);
-      const koSum = await translateKo(summarize(sumText));
-      detailed.push({...it, summary: summarize(sumText), title_ko: koTitle, summary_ko: koSum});
-    }catch{
-      detailed.push({...it, summary: summarize(sumText)});
-    }
+    const items = [];
+    $('h3 a').each((_,a)=>{
+      const title = $(a).text().trim();
+      let href = $(a).attr('href')||"";
+      if (href && href.startsWith("/")) href = "https://finance.yahoo.com"+href;
+      if (title) items.push({ title, link: href });
+    });
+    return { statusCode: 200, body: JSON.stringify({ symbol, items: items.slice(0,10) }) };
+  }catch(e){
+    return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
   }
-  return {statusCode:200, headers:{'Content-Type':'application/json'}, body: JSON.stringify({items:detailed})};
 };

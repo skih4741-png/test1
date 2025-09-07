@@ -1,12 +1,16 @@
 {
-  "name": "smart-trader-netlify-no-deps",
-  "version": "1.0.0",
+  "name": "smart-trader",
   "private": true,
-  "license": "MIT",
-  "description": "Netlify no-deps functions; minimal package to satisfy install step",
+  "version": "1.0.0",
   "scripts": {
-    "build": "echo 'no build'"
+    "dev": "netlify dev",
+    "build": "echo ok"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "node-fetch": "^3.3.2",
+    "date-fns": "^3.6.0",
+    "technicalindicators": "^3.1.0",
+    "twilio": "^5.2.0"
+  }
 }

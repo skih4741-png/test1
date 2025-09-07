@@ -1,7 +1,7 @@
-
 [build]
-  publish = "."
-  functions = "netlify/functions"
-[[scheduled]]
-  path = "/.netlify/functions/alert"
-  schedule = "*/5 * * * *"
+  functions = "functions"
+  publish = "public"
+
+[[scheduled.functions]]
+  path = "/.netlify/functions/alerts-scheduler"
+  schedule = "*/15 * * * *"
