@@ -1,0 +1,13 @@
+{
+  "name": "smart-trader-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo Build step not required for vanilla HTML"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}

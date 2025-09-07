@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>스마트 트레이더</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <h1>스마트 트레이더</h1>
+  <div class="right">
+    <button id="btn-save" class="primary">저장</button>
+    <button id="btn-load">불러오기</button>
+  </div>
+</header>
+
+<main class="container">
+  <nav class="tabs">
+    <button class="tab active" data-tab="portfolio">포트폴리오</button>
+    <button class="tab" data-tab="compare">종목 비교/랭킹</button>
+    <button class="tab" data-tab="dividends">월별 배당</button>
+    <button class="tab" data-tab="news">뉴스 요약/번역</button>
+    <button class="tab" data-tab="alerts">가격 하락 알림</button>
+  </nav>
+
+  <!-- Portfolio -->
+  <section id="portfolio" class="panel active">
+    <div class="grid">
+      <div class="card">
+        <h3>보유 종목 입력</h3>
+        <div class="row">
+          <input id="sym" placeholder="티커 (예: AAPL, MSFT)"/>
+          <input id="qty" type="number" placeholder="수량"/>
+          <input id="avg" type="number" step="0.0001" placeholder="평균매입가(USD)"/>
+          <button id="add" class="primary">추가</button>
+        </div>
+        <p class="hint">예시 포트폴리오 로드: <button id="load-sample">로드</button></p>
+        <table id="holdings">
+          <thead>
+            <tr><th>티커</th><th>수량</th><th>평균매입가</th><th>현재가</th><th>P/L(USD)</th><th>현실 수익률(KRW)</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>환율/세금/수수료/배당재투자</h3>
+        <div class="row">
+          <label>USD→KRW 환율</label>
+          <input id="fx" type="number" step="0.01" value="1350"/>
+        </div>
+        <div class="row">
+          <label>매도 수수료(%)</label>
+          <input id="fee" type="number" step="0.01" value="0.1"/>
+        </div>
+        <div class="row">
+          <label>배당 원천세(%)</label>
+          <input id="tax" type="number" step="0.01" value="15"/>
+        </div>
+        <div class="row">
+          <label>배당 재투자</label>
+          <input id="drip" type="checkbox"/>
+        </div>
+        <div class="row">
+          <label>매수/매도 타이밍 지표</label>
+          <select id="timing">
+            <option value="rsi">RSI(14)</option>
+            <option value="sma">SMA 크로스</option>
+            <option value="bb">볼린저밴드</option>
+          </select>
+        </div>
+        <button id="recalc" class="primary">재계산</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>시그널 & 차트</h3>
+      <canvas id="chart"></canvas>
+      <div id="signals"></div>
+    </div>
+  </section>
+
+  <!-- Compare/Ranking -->
+  <section id="compare" class="panel">
+    <div class="row">
+      <input id="cmp-input" placeholder="티커 쉼표로 입력 (예: AAPL,MSFT,GOOGL,VOO)"/>
+      <button id="cmp-run" class="primary">성능 비교</button>
+    </div>
+    <table id="cmp-table">
+      <thead>
+        <tr><th>티커</th><th>YTD%</th><th>1Y%</th><th>배당수익률%</th><th>저PBR</th><th>변동성</th><th>점수</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Dividends -->
+  <section id="dividends" class="panel">
+    <div class="row">
+      <input id="div-ticker" placeholder="티커 (예: T, MO, VZ)"/>
+      <button id="div-run" class="primary">배당 캘린더 불러오기</button>
+    </div>
+    <canvas id="div-chart"></canvas>
+    <table id="div-table">
+      <thead><tr><th>월</th><th>세후 배당(USD)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- News -->
+  <section id="news" class="panel">
+    <div class="row">
+      <input id="news-q" placeholder="키워드 또는 티커 (예: AAPL, semiconductor)"/>
+      <button id="news-run" class="primary">가져오기 & 번역</button>
+    </div>
+    <div id="news-list"></div>
+  </section>
+
+  <!-- Alerts -->
+  <section id="alerts" class="panel">
+    <div class="row">
+      <input id="alert-ticker" placeholder="티커 (예: AAPL)"/>
+      <input id="alert-thr" type="number" step="0.1" placeholder="하락 임계치 % (예: 3)"/>
+      <input id="alert-phone" placeholder="+821012345678 (선택)"/>
+      <button id="alert-add" class="primary">알림 등록</button>
+    </div>
+    <ul id="alert-items"></ul>
+    <p class="hint">Netlify Scheduled Function이 주기적으로 현재가를 확인해 임계치 하락 시 SMS(선택) 또는 앱 내 알림을 생성합니다.</p>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <span>Data: Yahoo Finance • VIC • DaraRoma • Macrotrends | © Smart Trader</span>
+</footer>
+
+<script src="./app.js"></script>
+</body>
+</html>
