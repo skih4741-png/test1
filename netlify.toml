@@ -1,8 +1,11 @@
 [build]
-  publish = "frontend"
   command = ""
+  publish = "."
+  functions = "netlify/functions"
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
+[functions]
+  external_node_modules = ["cheerio", "node-fetch"]
+
+[[functions]]
+  name = "alert"
+  schedule = "*/5 * * * *"
