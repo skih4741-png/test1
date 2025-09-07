@@ -1,13 +1,8 @@
 [build]
-  publish = "public"
-  functions = "functions"
+  publish = "frontend"
+  command = ""
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-# Every 30 minutes check alerts (configurable in function)
-[[scheduled.functions]]
-  name = "alerts"
-  cron = "*/30 * * * *"
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Trader Pro</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <h1>📈 Smart Trader Pro</h1>
+    <p>Yahoo Finance + Macrotrends + Value Investors Club + DaraRoma 연동(요약/번역)</p>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h2>종목 비교 / 시그널</h2>
+      <div class="row">
+        <input id="tickers" placeholder="예: AAPL,MSFT,VOO" />
+        <button onclick="loadSignals()">시그널</button>
+        <button onclick="loadNews()">뉴스요약</button>
+      </div>
+      <canvas id="priceChart"></canvas>
+      <div id="signals"></div>
+    </div>
+
+    <div class="card">
+      <h2>월별 배당 현황</h2>
+      <div class="row">
+        <input id="divTicker" placeholder="예: AAPL" />
+        <button onclick="loadDividends()">불러오기</button>
+      </div>
+      <table id="divTable"></table>
+      <canvas id="divChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>현실 수익률 (KRW)</h2>
+      <div class="row">
+        <input id="ryTicker" placeholder="AAPL">
+        <input id="ryShares" type="number" step="any" placeholder="보유수량">
+        <input id="ryAvg" type="number" step="any" placeholder="평단(USD)">
+        <input id="ryAnnualDiv" type="number" step="any" placeholder="연간배당/주(USD)">
+        <button onclick="loadRealYield()">계산</button>
+      </div>
+      <pre id="ryOut"></pre>
+    </div>
+
+    <div class="card">
+      <h2>조건 스크리너</h2>
+      <div class="row">
+        <input id="scrTickers" placeholder="분석할 티커들 콤마로 입력">
+        <button onclick="runScreen()">실행</button>
+      </div>
+      <small>조건: PER 1.5~15, PSR ≥ 3, ROE ≥ 15%</small>
+      <table id="scrTable"></table>
+    </div>
+
+    <div class="card">
+      <h2>매수/매도 타이밍 참고 이미지</h2>
+      <div class="thumbs">
+        <p>샘플 이미지 없음</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Netlify 정적 프론트엔드 + FastAPI 백엔드</p>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "base_currency": "KRW",
+  "fx_pair": "KRW=X",
+  "tax_rate_dividend": 0.154,
+  "commission_bps": 8,
+  "reinvent_dividends": false,
+  "holdings": [
+    {
+      "ticker": "AAPL",
+      "shares": 10,
+      "avg_cost": 170.0,
+      "currency": "USD",
+      "alert_drop_pct": 5,
+      "alert_base": "close"
+    },
+    {
+      "ticker": "MSFT",
+      "shares": 5,
+      "avg_cost": 330.0,
+      "currency": "USD",
+      "alert_drop_pct": 6,
+      "alert_base": "close"
+    },
+    {
+      "ticker": "KO",
+      "shares": 20,
+      "avg_cost": 58.5,
+      "currency": "USD",
+      "alert_drop_pct": 4,
+      "alert_base": "close"
+    }
+  ]
+}

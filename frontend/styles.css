@@ -1,0 +1,13 @@
+:root{--bg:#0b1020;--fg:#e9eef7;--card:#121937;--muted:#9fb3c8}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Apple SD Gothic Neo,Malgun Gothic,Arial;background:var(--bg);color:var(--fg)}
+header{padding:16px 20px;border-bottom:1px solid #223056}
+h1{margin:0 0 6px 0} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;padding:16px}
+.card{background:var(--card);border:1px solid #223056;border-radius:16px;padding:12px 14px;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+input,button{padding:10px 12px;border-radius:10px;border:1px solid #2a3b6a;background:#0e1530;color:var(--fg)}
+button{cursor:pointer;background:#1b2a5b}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+td,th{border-bottom:1px solid #2a3b6a;padding:8px;text-align:left}
+pre{background:#0e1530;padding:10px;border-radius:10px;overflow:auto}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.thumbs img{width:100%;border-radius:12px;border:1px solid #2a3b6a}
