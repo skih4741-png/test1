@@ -10,7 +10,6 @@ function toE164KR(input){
   if (d.length===10 || d.length===11) return '+82' + d;
   return '+82' + d;
 }
-
 async function blobsList(){
   const url = process.env.NETLIFY_BLOBS_URL;
   const token = process.env.NETLIFY_BLOBS_TOKEN;
@@ -40,13 +39,9 @@ async function blobsPut(key, val){
 async function blobsDelete(key){
   const url = process.env.NETLIFY_BLOBS_URL;
   const token = process.env.NETLIFY_BLOBS_TOKEN;
-  const r = await fetch(`${url}/smart-trader/${key}`, {
-    method:'DELETE',
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const r = await fetch(`${url}/smart-trader/${key}`, { method:'DELETE', headers: { Authorization: `Bearer ${token}` } });
   return r.ok;
 }
-
 async function twilioSMS(body, toOne){
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
@@ -60,46 +55,19 @@ async function twilioSMS(body, toOne){
     body: new URLSearchParams({ From: from, To: to, Body: body })
   })));
 }
-
 async function yahooQuote(ticker){
   const r = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(ticker)}`);
   const j = await r.json();
   const q = j.quoteResponse?.result?.[0] || {};
-  return { price: q.regularMarketPrice, prevClose: q.regularMarketPreviousClose, name:q.shortName, currency:q.currency };
+  return { price: q.regularMarketPrice, name:q.shortName, currency:q.currency };
 }
 
 exports.handler = async (event)=>{
+  const method = (event.httpMethod||'GET').toUpperCase();
   const url = new URL(event.rawUrl || event.url);
-  const action = url.searchParams.get('action') || 'list';
+  const action = url.searchParams.get('action');
 
-  // save: ?action=save&ticker=MO&drop=1&contact=010...&base=49.5
-  if (action === 'save'){
-    const ticker = (url.searchParams.get('ticker')||'').toUpperCase();
-    const drop = parseFloat(url.searchParams.get('drop')||'0');
-    const contact = toE164KR(url.searchParams.get('contact')||'');
-    const base = parseFloat(url.searchParams.get('base')||'0');
-    if (!ticker || !drop || !contact || !base) return json({ ok:false, error:'Missing params' }, 400);
-    const key = `alerts/${ticker}-${Date.now()}`;
-    await blobsPut(key, { ticker, drop, contact, base });
-    return json({ ok:true, key });
-  }
-
-  // list
-  if (action === 'list'){
-    const keys = await blobsList();
-    const items = await Promise.all(keys.map(k=>blobsGet(k)));
-    return json({ items: items.filter(Boolean) });
-  }
-
-  // delete: ?action=del&key=alerts/...
-  if (action === 'del'){
-    const key = url.searchParams.get('key');
-    if (!key) return json({ ok:false }, 400);
-    await blobsDelete(key);
-    return json({ ok:true });
-  }
-
-  // run: check all alerts and send SMS
+  // CRON/RUN
   if (action === 'run'){
     const keys = await blobsList();
     const alerts = (await Promise.all(keys.map(k=>blobsGet(k)))).filter(Boolean);
@@ -117,5 +85,60 @@ exports.handler = async (event)=>{
     return json({ ok:true, checked: alerts.length });
   }
 
-  return json({ error:'unknown action' }, 400);
+  // LIST (GET /alert)
+  if (method === 'GET' && !action){
+    const keys = await blobsList();
+    const items = await Promise.all(keys.map(k=>blobsGet(k)));
+    return json({ items: items.filter(Boolean) });
+  }
+
+  // SAVE (POST /alert  body: {ticker, drop, phone})
+  if (method === 'POST'){
+    try{
+      const body = JSON.parse(event.body||'{}');
+      const ticker = String(body.ticker||'').toUpperCase();
+      const drop = parseFloat(body.drop||'0');
+      const contact = toE164KR(body.phone||body.contact||'');
+      if(!ticker || !drop || !contact) return json({ok:false, error:'Missing params'},400);
+      const q = await yahooQuote(ticker);
+      const base = q.price;
+      const key = `alerts/${ticker}-${Date.now()}`;
+      await blobsPut(key, { ticker, drop, contact, base });
+      return json({ ok:true, key });
+    }catch(e){
+      return json({ ok:false, error:String(e) }, 400);
+    }
+  }
+
+  // DELETE (DELETE /alert?ticker=MO or ?key=alerts/...)
+  if (method === 'DELETE'){
+    const key = url.searchParams.get('key');
+    const ticker = (url.searchParams.get('ticker')||'').toUpperCase();
+    if (key){
+      await blobsDelete(key);
+      return json({ ok:true });
+    }
+    if (ticker){
+      const keys = await blobsList();
+      const dels = keys.filter(k=>k.includes(`/${ticker}-`));
+      await Promise.all(dels.map(blobsDelete));
+      return json({ ok:true, deleted: dels.length });
+    }
+    return json({ ok:false, error:'Missing key or ticker' }, 400);
+  }
+
+  // GET legacy action=save&ticker=...&drop=...&contact=...
+  if (action === 'save'){
+    const ticker = (url.searchParams.get('ticker')||'').toUpperCase();
+    const drop = parseFloat(url.searchParams.get('drop')||'0');
+    const contact = toE164KR(url.searchParams.get('contact')||'');
+    if (!ticker || !drop || !contact) return json({ ok:false, error:'Missing params' }, 400);
+    const q = await yahooQuote(ticker);
+    const base = q.price;
+    const key = `alerts/${ticker}-${Date.now()}`;
+    await blobsPut(key, { ticker, drop, contact, base });
+    return json({ ok:true, key });
+  }
+
+  return json({ error:'unsupported request' }, 400);
 };
