@@ -4,28 +4,23 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Smart Trader – Portfolio · Screener · Compare · Dividends · News · Alerts</title>
+  <title>Smart Trader – 안정화 버전</title>
   <style>
     body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; padding:16px; line-height:1.4;}
     h2{margin-top:24px; border-bottom:1px solid #eee; padding-bottom:6px;}
-    .grid{display:grid; gap:12px;}
-    .cols-2{grid-template-columns:1fr 1fr;}
-    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .row{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
     input, select, button{padding:6px 8px; font-size:14px;}
     table{width:100%; border-collapse:collapse; margin-top:8px;}
     th,td{border:1px solid #eee; padding:6px; text-align:left;}
     td.num{text-align:right;}
-    .card{border:1px solid #eee; padding:8px; border-radius:8px; margin:6px 0;}
-    .hint{font-size:12px; color:#666;}
-    .spark canvas{display:block}
-    .danger{color:#b00020}
+    #err{position:sticky; top:0; left:0; right:0; background:#fee; color:#900; padding:8px; display:none; z-index:10; white-space:pre-wrap; font-size:12px;}
   </style>
 </head>
 <body>
-  <h1>Smart Trader</h1>
-  <div class="hint">야후 파이낸스/매크로트렌즈/데이터로마 연동 · 환율 동기화, 포트폴리오/스크리너/비교/배당/뉴스/알림</div>
+  <div id="err"></div>
 
-  <!-- Portfolio -->
+  <h1>Smart Trader (Fixed)</h1>
+
   <h2>보유 종목</h2>
   <div class="row">
     <input id="tickerInput" placeholder="AAPL"/>
@@ -34,15 +29,15 @@
     <button id="addBtn">추가</button>
   </div>
   <div class="row">
-    <label>USD→KRW 환율 <input id="fxInput" type="number" value="1350"> <button id="fxSyncBtn">야후 환율 동기화</button></label>
-    <label>수수료(%) <input id="feeInput" type="number" value="0.1"></label>
-    <label>배당세(%) <input id="taxInput" type="number" value="15"></label>
+    <label>환율(USDKRW) <input id="fxInput" type="number" value="1350"> <button id="fxSyncBtn">동기화</button></label>
+    <label>수수료% <input id="feeInput" type="number" value="0.1"></label>
+    <label>배당세% <input id="taxInput" type="number" value="15"></label>
     <label>재투자 <input id="reinvestInput" type="checkbox"></label>
     <select id="timingSelect"><option value="rsi14">RSI(14)</option></select>
     <button id="recalcBtn">재계산</button>
   </div>
   <table>
-    <thead><tr><th>Ticker</th><th>수량</th><th>평단</th><th>현재가</th><th>P/L(USD)</th><th>수익률</th><th>행</th></tr></thead>
+    <thead><tr><th>Ticker</th><th>수량</th><th>평단</th><th>현재가</th><th>P/L</th><th>수익률</th><th>행</th></tr></thead>
     <tbody id="positionsTbody"></tbody>
   </table>
   <div class="row">
@@ -50,20 +45,19 @@
     <div id="signalInfo"></div>
   </div>
 
-  <!-- Screener -->
   <h2>가치 스크리너</h2>
   <div class="row">
-    <label>투자금액: <input id="scrMin" type="number" placeholder="최소(USD)"/> ~ <input id="scrMax" type="number" placeholder="최대(USD)"/></label>
+    <input id="scrMin" type="number" placeholder="최소(USD)"/>
+    <input id="scrMax" type="number" placeholder="최대(USD)"/>
     <button id="scrBtn">추천 종목</button>
-    <button id="scrCsvBtn">CSV 다운로드</button>
-    <button id="scrXlsBtn">Excel 다운로드</button>
+    <button id="scrCsvBtn">CSV</button>
+    <button id="scrXlsBtn">Excel</button>
   </div>
   <table>
     <thead><tr><th>Ticker</th><th>Price</th><th>PER</th><th>PSR</th><th>ROE</th><th>Sector</th><th>MarketCap</th><th>Qty</th></tr></thead>
     <tbody id="scrTbody"></tbody>
   </table>
 
-  <!-- Compare / Ranking -->
   <h2>종목 비교/랭킹</h2>
   <div class="row">
     <input id="cmpInput" placeholder="AAPL, MSFT, NVDA"/>
@@ -79,34 +73,30 @@
     <thead>
       <tr>
         <th>Ticker</th><th>Sector</th><th>MarketCap</th>
-        <th>Return%</th><th>AdjReturn% (1sh, 세후배당)</th><th>NetDividendUSD(1sh)</th><th>AdjReturn KRW (1sh)</th>
+        <th>Return%</th><th>AdjReturn% (1sh, 세후배당)</th><th>NetDividendUSD</th><th>AdjReturn KRW</th>
         <th>PER</th><th>PSR</th><th>ROE</th><th>Rank</th><th>Mini</th>
       </tr>
     </thead>
     <tbody id="cmpTbody"></tbody>
   </table>
 
-  <!-- Dividends Pivot -->
-  <h2>월별 배당 (연/월 피벗)</h2>
+  <h2>월별 배당(연/월 피벗)</h2>
   <div class="row">
     <input id="divPivotTicker" placeholder="AAPL"/>
     <button id="divPivotBtn">Load Pivot</button>
   </div>
-  <div id="divPivotInfo" class="hint"></div>
-  <h4>Sum by Year/Month</h4>
+  <div id="divPivotInfo"></div>
   <table><thead>
     <tr><th>Year</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr>
   </thead><tbody id="divPivotSum"></tbody></table>
-  <h4>Average by Year/Month</h4>
   <table><thead>
     <tr><th>Year</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr>
   </thead><tbody id="divPivotAvg"></tbody></table>
   <canvas id="divPivotChart" width="640" height="160"></canvas>
 
-  <!-- News -->
-  <h2>뉴스 요약/번역(확장)</h2>
+  <h2>뉴스</h2>
   <div class="row">
-    <input id="newsInput" placeholder="NVDA or 'semiconductor'"/>
+    <input id="newsInput" placeholder="NVDA"/>
     <button id="newsBtn">Fetch News</button>
   </div>
   <table>
@@ -114,8 +104,7 @@
     <tbody id="newsTbody"></tbody>
   </table>
 
-  <!-- Alerts -->
-  <h2>가격 하락 알림 (5분 주기)</h2>
+  <h2>가격 하락 알림</h2>
   <div class="row">
     <input id="alertTicker" placeholder="AAPL"/>
     <input id="alertDrop" type="number" placeholder="하락%"/>

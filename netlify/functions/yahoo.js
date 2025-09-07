@@ -13,14 +13,13 @@ exports.handler = async (event) => {
       return json({ price: q.regularMarketPrice, currency: q.currency, name:q.shortName });
     }
     if (f === 'dividends'){
-      const range = url.searchParams.get('range') || '10y';
+      const range = url.searchParams.get('range') || '12y';
       const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${range}&interval=1mo&events=div`);
       const j = await r.json();
       const c = j.chart?.result?.[0];
       const events = (c?.events?.dividends) || {};
       const items = Object.values(events).map(d=>({amount:d.amount, date:d.date}));
-      const total = items.reduce((a,b)=>a+b.amount,0);
-      return json({items, total});
+      return json({items});
     }
     if (f === 'profile'){
       const r = await fetch(`https://query2.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=price,assetProfile`);

@@ -5,7 +5,6 @@ exports.handler = async (event) => {
   const q = url.searchParams.get('q');
   if(!q) return json({items:[]});
   try{
-    // simple Yahoo RSS proxy parse server-side for CORS-free
     const rss = await fetch(`https://feeds.finance.yahoo.com/rss/2.0/headline?s=${encodeURIComponent(q)}&region=US&lang=en-US`);
     const txt = await rss.text();
     const items = [...txt.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m=>m[1]).slice(0,30).map(it=>{
